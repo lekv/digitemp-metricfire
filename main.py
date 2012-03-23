@@ -33,7 +33,11 @@ def check_create_config_file():
 
 def get_temperature():
   """Query the temperatur sensor"""
-  args = [ '-t', config['sensor'], # query the configured sensor
+  # Config file path
+  path = config.get('configfile', 'digitemp.conf')
+  path = os.path.abspath('digitemp.conf')
+  args = [ '-t', config['sensor'],  # query the configured sensor
+           '-c', path,              # config file path
            '-q',                    # omit the banner
            '-o %C',                 # show only the temperatur in Celsius
            ]
