@@ -39,7 +39,8 @@ def get_temperatures():
   # Config file path
   path = config.get('configfile', 'digitemp.conf')
   path = os.path.abspath('digitemp.conf')
-  args = [ '-c', path,              # config file path
+  args = [ '-a',                    # Query all sensors
+           '-c', path,              # config file path
            '-q',                    # omit the banner
            '-o %C',                 # show only the temperatur in Celsius
            ]
