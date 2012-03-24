@@ -7,11 +7,13 @@ Python DigiTemp Metricfire connector
 import subprocess, time, logging, os, sys
 import metricfire
 
+from apikey import api_key
+
 
 config = {
     'digitemp': '/usr/bin/digitemp_DS9097',
     'sensors': ['outside', 'inside'],
-    'api-key': 'api_key',
+    'api-key': api_key,
     'interval': 60,
     'configfile': 'digitemp.conf',
     'port': '/dev/ttyS0',
