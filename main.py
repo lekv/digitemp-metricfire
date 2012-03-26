@@ -1,30 +1,28 @@
 #!/usr/bin/env python
 
 """
-Python DigiTemp Metricfire connector
+#Python DigiTemp Metricfire connector
+
+This program queries temperature sensors and upload the data to metricfire via
+its python API.  It will run until terminated by ctrl-c. Alternatively have a
+look at the --once and --quiet command line switches to run under cron.
+
+## Configuration
+For the configuration of the various runtime parameters, have a look at the
+config object below.
+
+## Supported command line switches:
+  --once      : Run only once and exit after uploading the data.
+  --quiet     : Don't output anything below ERROR level.
 """
 
 import subprocess, time, logging, os, sys
 import metricfire
 
-from apikey import api_key
-
-
-config = {
-    'digitemp': '/usr/bin/digitemp_DS9097',
-    'sensors': ['outside', 'inside'],
-    'api-key': api_key,
-    'interval': 60,
-    'configfile': 'digitemp.conf',
-    'port': '/dev/ttyS0',
-    'metricfire_try_adns': False,
-    }
-
-def dump_config():
-  print config
-  return config
+from config import config
 
 def check_create_config_file():
+  """Check for the presence of the config file and create it, if it is missing."""
   port = config.get('port', '/dev/ttyS0')
   path = config.get('configfile', 'digitemp.conf')
   path = os.path.abspath(path)
@@ -37,7 +35,9 @@ def check_create_config_file():
     return
 
 def get_temperatures():
-  """Query the temperatur sensor"""
+  """Query the temperatur sensor.
+  
+   This returns a list of temperatures converted to float values."""
   # Config file path
   path = config.get('configfile', 'digitemp.conf')
   path = os.path.abspath('digitemp.conf')
