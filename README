@@ -5,6 +5,10 @@ This program queries temperature sensors and upload the data to
 terminated by ctrl-c. Alternatively have a look at the --once and --quiet
 command line switches to run under cron.
 
+## Requirements
+ - You need to have [Digitemp] installed and working.
+ - To run the included unit tests, you need [Fabric] installed.
+
 ## Building the sensors
 TODO: Link to websites describing the process.
 
@@ -24,3 +28,7 @@ and will have cron call the script once per minute. Errors during execution
 will show up in your syslog and will usually be sent to you via email.
 
     * * * * * TODO
+
+## Unittests
+You can run the included unit tests, by calling `fab test` in the top level
+directory.
