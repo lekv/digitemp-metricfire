@@ -11,6 +11,7 @@ config = {
     'sensors': ['outside', 'inside'],
     # You can either specify your API key here or place it into a file
     # called apikey.py in the same directory.
+    #'api-key': 'YOUR-API-KEY-HERE',
     'api-key': api_key,
     # The interval in seconds between sensor updates
     'interval': 60,
