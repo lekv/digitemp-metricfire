@@ -31,4 +31,4 @@ will show up in your syslog and will usually be sent to you via email.
 
 ## Unittests
 You can run the included unit tests, by calling `fab test` in the top level
-directory.
+directory. However you need mock version => 0.8 for the tests to run.
