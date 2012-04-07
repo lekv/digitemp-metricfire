@@ -27,7 +27,7 @@ The following line can be entered into your crontab (hint: run `crontab -e`)
 and will have cron call the script once per minute. Errors during execution
 will show up in your syslog and will usually be sent to you via email.
 
-    * * * * * TODO
+    * * * * * cd PATH_WHERE_YOU_CHECKED_OUT; ./main.py --quiet --once;
 
 ## Unittests
 You can run the included unit tests, by calling `fab test` in the top level
