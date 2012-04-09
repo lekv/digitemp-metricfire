@@ -10,7 +10,7 @@ command line switches to run under cron.
  - To run the included unit tests, you need [Fabric] installed.
 
 ## Building the sensors
-TODO: Link to websites describing the process.
+I've written a [blog post tutorial](http://lekv.de/2012/04/09/measuring-temperature-with-linux/) on how to solder suitable DS18S20 sensors to the serial port of a computer. Also there is [this tutorial](http://www.pihost.us/~stacato/digitemp/) which I found most useful.
 
 ## Configuration
 The various runtime parameters are set in config.py. The api-key can also be
