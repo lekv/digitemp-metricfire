@@ -18,8 +18,8 @@ specified in an own file. The various configuration parameters are documented
 in config.py itself.
 
 ## Supported command line switches:
-  --once      : Run only once and exit after uploading the data.
-  --quiet     : Don't output anything below ERROR level.
+- --once      : Run only once and exit after uploading the data.
+- --quiet     : Don't output anything below ERROR level.
 
 ## Running with cron
 
