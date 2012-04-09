@@ -23,13 +23,19 @@ from config import config
 
 def check_create_config_file():
   """Check for the presence of the config file and create it, if it is missing."""
-  port = config.get('port', '/dev/ttyS0')
-  path = config.get('configfile', 'digitemp.conf')
-  path = os.path.abspath(path)
+  binary = config['digitemp']
+  port   = config.get('port', '/dev/ttyS0')
+  path   = config.get('configfile', 'digitemp.conf')
+  path   = os.path.abspath(path)
   if not os.path.exists(path):
     # create the config file using digitemp
     logging.info("Creating config file %s" % path)
-    return subprocess.call([config['digitemp'], '-i', '-c', path, '-q', '-s', port])
+    ret = subprocess.call([binary, '-i', '-c', path, '-q', '-s', port])
+    if ret:
+      logging.error("Error creating the config file")
+    else:
+      logging.info("Created the config file %s. Use '%s -a' to query the sensors and update the designated names in config.py." % (path, binary))
+    sys.exit()
   else:
     logging.debug("Using existing config file %s" % path)
     return
