@@ -34,7 +34,7 @@ def check_create_config_file():
     if ret:
       logging.error("Error creating the config file")
     else:
-      logging.info("Created the config file %s. Use '%s -a' to query the sensors and update the designated names in config.py." % (path, binary))
+      logging.info("Created the config file %s. Use '%s -c %s -a' to query the sensors and update the designated names in config.py." % (path, binary, path))
     sys.exit()
   else:
     logging.debug("Using existing config file %s" % path)
