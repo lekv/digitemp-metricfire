@@ -31,7 +31,13 @@ class TestMain(unittest.TestCase):
     
     # Make sure, config file doesn't exist
     self.assertFalse(os.path.exists(path))
-    main.check_create_config_file()
+    try: 
+      main.check_create_config_file()
+    except SystemExit:
+      # The script will exit after the config file has been created to allow
+      # for the user to configure the tool before starting the query-upload
+      # loop
+      pass
     # Make sure, config file exists
     self.assertTrue(os.path.exists(path))
     os.remove(path)
