@@ -2,7 +2,7 @@
 
 # (c) Metricfire 2012
 
-__version__ = "0.4.0"
+__version__ = "0.4.3"
 
 import os
 import sys
@@ -15,6 +15,7 @@ import inspect
 import hashlib
 import binascii
 import warnings
+import threading
 
 try:
    import simplejson as json
@@ -69,8 +70,12 @@ class Client:
       self._encryption     = encryption
       self._application    = application
       self._sequence       = 0
-      self._sessionkey     = self._generateSessionKey()
+      self._sessionkey     = None
       self._keyfingerprint = hashlib.md5(self._key).hexdigest()
+
+      # This lock is used (very carefully) later in _format() when updating
+      # _sequence and _sessionkey. See _format() for more detail.
+      self._lock = threading.Lock()
 
       if try_adns and adns is None:
          warnings.warn("Could not load python module 'adns'. (%s) This is not necessarily a problem, but Metricfire DNS lookups cannot be guaranteed to be non-blocking. You can disable this warning by using metricfire.init(..., try_adns = False)" % _adns_import_exception, RuntimeWarning, 3)
@@ -131,12 +136,32 @@ class Client:
             self._sockaddrs.append(sockaddr)
 
    def _format(self, datapoints):
-      
+     
+      # Locking is used very carefully here because threads can interfere with
+      # the modification of sequence numbers and session keys.
+
+      # Using locking here doesn't break the non-blocking sending contract
+      # because:
+      # * Reading/writing basic types does not block
+      # * Calling os.urandom() does not block as it reads from /dev/urandom
+      #   which, on UNIX-like systems, is a non-blocking entropy source.
+      #   In comparison, /dev/random can block while waiting for entropy.
+      # See http://docs.python.org/library/os.html#os.urandom and urandom (4)
+      # Also, not using "with self.lock:" syntax for python2.5 compatibility :(
+      self._lock.acquire()
+      self._sequence += 1
+      if self._sessionkey is None or self._sequence >= 2**32:
+         self._sequence = 1
+         self._sessionkey = os.urandom(16)
+      sequence = self._sequence
+      sessionkey = self._sessionkey
+      self._lock.release()
+
       # TODO Pre-fragmentation for multiple messages?
 
       body = {'h': self._hostname, 'a': self._application, 'm': []}
-      for (metric, value) in datapoints:
-         body['m'].append((metric, value))
+      for (metric, value, timestamp) in datapoints:
+         body['m'].append((metric, value, timestamp))
 
       body_json = json.dumps(body)
 
@@ -146,30 +171,25 @@ class Client:
 
          # TODO Compress body?
 
-      header = {'v': self._protoversion, 'f': self._keyfingerprint, 's': binascii.hexlify(self._sessionkey), 'q': self._sequence}
+      header = {'v': self._protoversion, 'f': self._keyfingerprint, 's': binascii.hexlify(sessionkey), 'q': sequence}
 
       if self._authentication:
          # Calculate a HMAC for the body, including a session key and a sequence
          # number to prevent replay attacks.
          auth = hmac.HMAC(self._key, digestmod = hashlib.sha256)
-         auth.update(self._sessionkey)
-         auth.update(str(self._sequence))
+         auth.update(sessionkey)
+         auth.update(str(sequence))
          auth.update(body_json)
          header['a'] = auth.hexdigest()
   
       header_json = json.dumps(header)
 
-      # Increment the sequence number and if necessary, roll it over and generate a new session key.
-      self._sequence = (self._sequence + 1) % 2**32
-      if self._sequence == 0:
-         self._sessionkey = self._generateSessionKey()
-
       # Return a complete message.
       return header_json + "\n" + body_json
 
-   def send(self, metric, value):
-      """Send a metric and a value to Metricfire without blocking."""
-      message = self._format([(metric, value)])
+   def send(self, metric, value, timestamp = None):
+      """Send a metric and a value to Metricfire without blocking. If a UNIX timestamp is supplied, the value will be recorded as happening at that time. Otherwise, the current time is assumed."""
+      message = self._format([(metric, value, timestamp)])
       self._send(message)
 
    def _send(self, content):
@@ -209,13 +229,13 @@ def init(*args, **kwargs):
    global _module_client
    _module_client = Client(*args, **kwargs)
 
-def send(metric, value):
-   """Send a metric and a value to Metricfire without blocking."""
+def send(metric, value, timestamp = None):
+   """Send a metric and a value to Metricfire without blocking. If a UNIX timestamp is supplied, the value will be recorded as happening at that time. Otherwise, the current time is assumed."""
    global _module_client
    if _module_client is None:
       warnings.warn("metricfire.send() called without metricfire.init() being called first. Either call metricfire.init(), or use a metricfire.Client() object. Metric message dropped.", RuntimeWarning, 2)
    else:
-      _module_client.send(metric, value)
+      _module_client.send(metric, value, timestamp)
 
 def measure(prefix = None):
    """Decorate a function whose calling frequency and running times should be reported to Metricfire. Optionally set a prefix for the resulting metric name. The metric name takes the form of: [prefix.][module.][class.]function"""
