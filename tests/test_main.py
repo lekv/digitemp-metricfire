@@ -23,7 +23,8 @@ class TestMain(unittest.TestCase):
     main.metricfire.send("foo", "bar")
     self.assertTrue(mf_mock.called)
 
-  def test_check_create_config_file(self):
+  @mock.patch('sys.exit')
+  def test_check_create_config_file(self, sys_exit_mock):
     path = main.config['configfile']
     self.assertIn('tmp', path)
     if os.path.exists(path):
@@ -31,13 +32,12 @@ class TestMain(unittest.TestCase):
     
     # Make sure, config file doesn't exist
     self.assertFalse(os.path.exists(path))
-    try: 
-      main.check_create_config_file()
-    except SystemExit:
-      # The script will exit after the config file has been created to allow
-      # for the user to configure the tool before starting the query-upload
-      # loop
-      pass
+    main.check_create_config_file()
+    # The script will exit after the config file has been created to allow
+    # for the user to configure the tool before starting the query-upload
+    # loop. Make sure, exit was called.
+    self.assertTrue(sys_exit_mock.called)
+    # Alternatively: sys_exit_mock.assert_called_once_with()
     # Make sure, config file exists
     self.assertTrue(os.path.exists(path))
     os.remove(path)
